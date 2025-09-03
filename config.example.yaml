@@ -1,0 +1,12 @@
+
+api_tennis:
+  base_url: "https://api-tennis.com"
+  api_key: "PUT IN RENDER ENV"
+  auth_header: "Authorization"
+live_watch:
+  poll_seconds: 30
+  resolve_days_window: 2
+
+discord:
+  bot_token: "PUT IN RENDER ENV"
+  channel_id: 123456789012345678
