@@ -13,6 +13,8 @@ import requests
 import discord
 from datetime import datetime, timezone, timedelta
 from dateutil import parser as dtparse
+import os, asyncio
+from aiohttp import web
 
 # --------- ENV (set these on the cloud host) ---------
 BOT_TOKEN   = os.environ["DISCORD_BOT_TOKEN"]
@@ -131,6 +133,20 @@ def get_live(mid: str) -> tuple[str, str, bool]:
     score_text = " | ".join([t for t in (sets, games, point) if t])
     is_final = status_text.lower() in ("finished", "ended", "completed", "final")
     return status_text, score_text, is_final
+    
+
+async def health(request):
+    return web.Response(text="ok")
+    
+async def start_http():
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", "8000"))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"[http] listening on :{port}")
 
 # ------- Bot -------
 intents = discord.Intents.default()
@@ -152,8 +168,8 @@ async def on_ready():
     print(f"[discord] logged in as {client.user} (listening in channel {CHANNEL_ID})")
     if not _started:
         _started = True
-        # start the background poller safely (no direct access to client.loop)
-        asyncio.create_task(poll_loop())
+        asyncio.create_task(start_http())   # start tiny HTTP server
+        asyncio.create_task(poll_loop())    # start your polling loop
 
 async def poll_loop():
     await client.wait_until_ready()
