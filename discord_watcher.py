@@ -195,10 +195,13 @@ async def poll_loop():
 
 @client.event
 async def on_message(message: discord.Message):
-    # Only watch the target channel & ignore bot's own messages
-    if message.channel.id != CHANNEL_ID or message.author.bot:
+    if message.channel.id != CHANNEL_ID:
         return
-    # We trigger on webhook text or bot text that starts with 📣 Bet placed:
+
+    # Accept webhooks; ignore other bot/system messages
+    if message.author.bot and message.webhook_id is None:
+        return
+
     content = message.content or ""
     if "Bet placed:" not in content:
         return
