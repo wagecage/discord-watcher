@@ -143,6 +143,17 @@ REG: dict[int, dict] = {}
 @client.event
 async def on_ready():
     print(f"[discord] logged in as {client.user} (listening in channel {CHANNEL_ID})")
+    
+_started = False  # module-level guard so we don't start twice
+
+@client.event
+async def on_ready():
+    global _started
+    print(f"[discord] logged in as {client.user} (listening in channel {CHANNEL_ID})")
+    if not _started:
+        _started = True
+        # start the background poller safely (no direct access to client.loop)
+        asyncio.create_task(poll_loop())
 
 async def poll_loop():
     await client.wait_until_ready()
@@ -200,8 +211,6 @@ async def on_message(message: discord.Message):
     # Register for polling (use the posted embed message id)
     if entry.get("message_id"):
         REG[entry["message_id"]] = entry
-
-client.loop.create_task(poll_loop())
 
 if __name__ == "__main__":
     client.run(BOT_TOKEN)
